@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PDFsignture.Data;
+using PDFsignture.Interfaces;
+using PDFsignture.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,7 +13,9 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("PDFsignture")));
 
-
+// Add Services to the container
+builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
+builder.Services.AddScoped<ISignatureRepository, SignatureRepository>();
 
 var app = builder.Build();
 

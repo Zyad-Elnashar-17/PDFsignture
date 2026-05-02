@@ -17,7 +17,7 @@ A professional web application built with **.NET 10 (ASP.NET Core MVC)** that al
 
 ## 📦 Key NuGet Packages
 
-```bash
+
 dotnet add package itext7
 dotnet add package itext7.bouncy-castle-adapter
 dotnet add package Microsoft.AspNetCore.Identity.EntityFrameworkCore

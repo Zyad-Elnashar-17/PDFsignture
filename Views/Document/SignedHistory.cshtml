@@ -1,0 +1,32 @@
+﻿@model IEnumerable<PDFsignture.Models.SignedDocument>
+
+<h2 class="mb-4">Signed Documents History</h2>
+
+<table class="table table-striped mt-3">
+    <thead>
+        <tr>
+            <th>Original File</th>
+            <th>Signature Used</th>
+            <th>Date Signed</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Document.FileName</td>
+                <td>
+                    <img src="@item.Signature.SignatureImagePath" width="60" class="border rounded" />
+                </td>
+                <td>@item.SignedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                <td>
+                    
+                    <a href="@item.SignedFilePath" target="_blank" class="btn btn-sm btn-outline-success">
+                        <i class="bi bi-file-earmark-pdf"></i> Open Signed PDF
+                    </a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

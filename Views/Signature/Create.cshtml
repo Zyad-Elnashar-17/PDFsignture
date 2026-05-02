@@ -1,0 +1,56 @@
+﻿@model PDFsignture.ViewModels.SignatureVM
+
+<h2>Draw Your Signature</h2>
+
+<div class="card">
+    <div class="card-body">
+        <canvas id="sig-canvas" width="600" height="200" style="border: 2px dashed #ccc; cursor: crosshair;"></canvas>
+        
+        <form asp-action="Create" method="post" id="sig-form">
+            <input type="hidden" asp-for="SignatureDataUrl" id="sig-dataUrl" />
+            
+            <div class="form-check my-3">
+                <input asp-for="IsDefault" class="form-check-input" type="checkbox">
+                <label class="form-check-label" asp-for="IsDefault">Set as default signature</label>
+            </div>
+
+            <button type="button" class="btn btn-secondary" id="sig-clearBtn">Clear</button>
+            <button type="submit" class="btn btn-success" id="sig-submitBtn">Save Signature</button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const canvas = document.getElementById('sig-canvas');
+        const ctx = canvas.getContext('2d');
+        const form = document.getElementById('sig-form');
+        const dataUrlInput = document.getElementById('sig-dataUrl');
+        let drawing = false;
+
+        canvas.addEventListener('mousedown', () => drawing = true);
+        canvas.addEventListener('mouseup', () => { drawing = false; ctx.beginPath(); });
+        canvas.addEventListener('mousemove', draw);
+
+        function draw(e) {
+            if (!drawing) return;
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            ctx.strokeStyle = 'black';
+
+            // Calculate position relative to canvas
+            const rect = canvas.getBoundingClientRect();
+            ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+            ctx.stroke();
+        }
+
+        document.getElementById('sig-clearBtn').addEventListener('click', () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        });
+
+        form.addEventListener('submit', (e) => {
+            // Check if canvas is empty (basic check)
+            dataUrlInput.value = canvas.toDataURL();
+        });
+    </script>
+}

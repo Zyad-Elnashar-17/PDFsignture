@@ -1,0 +1,31 @@
+﻿@model IEnumerable<PDFsignture.Models.Signature>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>My Saved Signatures</h2>
+    <a asp-action="Create" class="btn btn-success">Create New Signature</a>
+</div>
+
+<div class="row">
+    @foreach (var sig in Model)
+    {
+        <div class="col-md-3 mb-4">
+            <div class="card h-100 @(sig.IsDefault ? "border-primary shadow-sm" : "")">
+                <div class="card-body text-center">
+                    <img src="@sig.SignatureImagePath" class="img-fluid mb-2" style="max-height: 100px;" alt="Signature" />
+                    @if (sig.IsDefault)
+                    {
+                        <span class="badge bg-primary d-block mb-2">Default</span>
+                    }
+                    <div class="small text-muted">Created: @sig.CreatedAt.ToString("dd/MM/yyyy")</div>
+                </div>
+            </div>
+        </div>
+    }
+    @if (!Model.Any())
+    {
+        <div class="col-12 text-center py-5">
+            <p class="text-muted">You haven't created any signatures yet.</p>
+            <a asp-action="Create" class="btn btn-primary">Draw Your First Signature</a>
+        </div>
+    }
+</div>

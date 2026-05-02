@@ -1,0 +1,47 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="text-center py-5 mt-5 bg-light rounded-3 shadow-sm">
+    <h1 class="display-4 fw-bold">Sign Your Documents Online</h1>
+    <p class="lead">A simple, secure, and fast way to apply digital signatures to your PDF files.</p>
+    
+    @if (!User.Identity.IsAuthenticated)
+    {
+        <div class="mt-4">
+            <a asp-area="Identity" asp-page="/Account/Register" class="btn btn-primary btn-lg px-4 gap-3">Get Started Now</a>
+            <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-outline-secondary btn-lg px-4">Login</a>
+        </div>
+    }
+    else
+    {
+        <div class="mt-4">
+            <a asp-controller="Document" asp-action="Upload" class="btn btn-primary btn-lg px-4">Upload a PDF to Sign</a>
+            
+        </div>
+    }
+</div>
+
+<div class="row mt-5 text-center">
+    <div class="col-md-4">
+        <div class="p-3">
+            <i class="bi bi-cloud-upload display-6 text-primary"></i>
+            <h3 class="mt-2">Upload</h3>
+            <p>Upload any PDF document from your device.</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="p-3">
+            <i class="bi bi-pencil-fill display-6 text-primary"></i>
+            <h3 class="mt-2">Sign</h3>
+            <p>Draw your signature once and reuse it across multiple documents.</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="p-3">
+            <i class="bi bi-file-earmark-check display-6 text-primary"></i>
+            <h3 class="mt-2">Download</h3>
+            <p>Get your signed document instantly with professional placement.</p>
+        </div>
+    </div>
+</div>

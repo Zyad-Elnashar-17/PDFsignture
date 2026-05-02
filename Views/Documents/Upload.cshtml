@@ -1,0 +1,17 @@
+﻿@model PDFsignture.ViewModels.UploadDocumentVM
+
+<h2>Upload New Document</h2>
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Upload" method="post" enctype="multipart/form-data">
+            <div class="form-group mb-3">
+                <label asp-for="PdfFile" class="form-label"></label>
+                <input asp-for="PdfFile" class="form-control" type="file" accept=".pdf" />
+                <span asp-validation-for="PdfFile" class="text-danger"></span>
+            </div>
+            <button type="submit" class="btn btn-primary">Upload</button>
+            <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+        </form>
+    </div>
+</div>

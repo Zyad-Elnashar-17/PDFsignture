@@ -1,0 +1,119 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>High Accuracy Signer</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <style>
+            body, html {
+                margin: 0;
+                padding: 0;
+                height: 100%;
+                width: 100%;
+                overflow: hidden;
+                background-color: #323639;
+            }
+
+            #viewport-container {
+                width: 100vw;
+                height: 100vh;
+                overflow-y: auto;
+                overflow-x: hidden;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+
+            canvas {
+                display: block;
+                margin: 0 auto 20px auto; 
+                box-shadow: 0 0 20px rgba(0,0,0,0.5);
+                cursor: crosshair;
+                background-color: white;
+            }
+
+            .instructions {
+                position: fixed;
+                top: 10px;
+                left: 50%;
+                transform: translateX(-50%);
+                z-index: 1000;
+                background: rgba(0,0,0,0.7);
+                color: white;
+                padding: 8px 20px;
+                border-radius: 20px;
+                pointer-events: none;
+            }
+    </style>
+</head>
+<body>
+
+    <div class="instructions">Click exactly where you want to place the signature</div>
+
+    <form asp-action="ProcessSigning" id="anywhereForm" method="post">
+        <input type="hidden" name="DocumentId" value="@ViewBag.DocumentId" />
+        <input type="hidden" name="SignatureId" value="@ViewBag.SignatureId" />
+        <input type="hidden" name="CoordinateX" id="coordX" />
+        <input type="hidden" name="CoordinateY" id="coordY" />
+        <input type="hidden" name="ContainerWidth" id="contW" />
+        <input type="hidden" name="ContainerHeight" id="contH" />
+        <input type="hidden" name="SelectedPageNumber" id="pageNum" />
+        <input type="hidden" name="Position" value="Anywhere" />
+    </form>
+
+    <div id="viewport-container">
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        async function initSigner() {
+        const loadingTask = pdfjsLib.getDocument('@ViewBag.DocumentPath');
+        const pdf = await loadingTask.promise;
+        const container = document.getElementById('viewport-container');
+
+        for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+            
+
+        const viewport = page.getViewport({ scale: 2.0 });
+
+        const canvas = document.createElement('canvas');
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+
+        canvas.style.width = viewport.width + "px";
+        canvas.style.height = viewport.height + "px";
+            
+        canvas.onclick = function(e) {
+        const rect = canvas.getBoundingClientRect();
+                
+
+        const x = e.offsetX;
+        const y = e.offsetY;
+
+        document.getElementById('coordX').value = x;
+        document.getElementById('coordY').value = y;
+        document.getElementById('contW').value = rect.width;
+        document.getElementById('contH').value = rect.height;
+        document.getElementById('pageNum').value = i;
+
+        if (confirm(`Place signature on page ${i}?`)) {
+        document.getElementById('anywhereForm').submit();
+        }
+        };
+
+        const context = canvas.getContext('2d');
+        await page.render({ canvasContext: context, viewport: viewport }).promise;
+        container.appendChild(canvas);
+        }
+        }
+
+        initSigner();
+    </script>
+</body>
+</html>

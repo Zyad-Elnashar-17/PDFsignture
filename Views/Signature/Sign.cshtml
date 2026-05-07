@@ -7,78 +7,139 @@
     var userSignatures = await SigRepo.GetUserSignaturesAsync(userId);
 }
 
-<h2 class="mb-4">Sign Document</h2>
-
-<div class="row">
-    <!-- Left Side: Configuration -->
-    <div class="col-md-4">
-        <form asp-action="ProcessSigning" method="post" class="card p-3 shadow-sm">
-            <input type="hidden" asp-for="DocumentId" />
-
-            <!-- 1. Select Signature -->
-            <div class="mb-3">
-                <label class="form-label fw-bold">1. Select Your Signature</label>
-                <div class="d-flex flex-wrap gap-2 mb-2">
-                    @foreach (var sig in userSignatures)
-                    {
-                        <div class="signature-option">
-                            <input type="radio" asp-for="SignatureId" value="@sig.Id" id="sig-@sig.Id" class="btn-check" required>
-                            <label class="btn btn-outline-secondary p-1" for="sig-@sig.Id">
-                                <img src="@sig.SignatureImagePath" width="80" alt="Signature" />
-                                <div class="small text-muted">@sig.CreatedAt.ToString("MM/yyyy")</div>
-                            </label>
-                        </div>
-                    }
-                </div>
-                <a asp-action="Create" class="btn btn-sm btn-outline-primary">+ Create New Signature</a>
-            </div>
-
-            <hr />
-
-            <!-- 2. Select Pages -->
-            <div class="mb-3">
-                <label class="form-label fw-bold">2. Which pages to sign?</label>
-                <div class="form-check">
-                    <input class="form-check-input" type="radio" asp-for="SignAllPages" value="true" id="allPages" checked>
-                    <label class="form-check-label" for="allPages">All Pages</label>
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" type="radio" asp-for="SignAllPages" value="false" id="specificPages">
-                    <label class="form-check-label" for="specificPages">Specific Pages</label>
-                </div>
-                <input asp-for="SpecificPages" class="form-control form-control-sm mt-2" placeholder="e.g. 1,3,5" />
-            </div>
-
-            <hr />
-
-            <!-- 3. Position -->
-            <div class="mb-3">
-                <label class="form-label fw-bold">3. Signature Position</label>
-                <select asp-for="Position" class="form-select">
-                    <option value="Bottom">Bottom Right</option>
-                    <option value="Top">Top Right</option>
-                </select>
-            </div>
-
-            <button type="submit" class="btn btn-success w-100 py-2">Apply Signature & Save</button>
-        </form>
+<div class="container py-4">
+    <div class="d-flex align-items-center mb-4">
+        <h2 class="mb-0">Sign Document</h2>
     </div>
 
-    <!-- Right Side: PDF Preview -->
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-header bg-secondary text-white">Document Preview</div>
-            <div class="card-body p-0">
-                <iframe src="@ViewBag.DocumentPath" width="100%" height="600px"></iframe>
+    <div class="row">
+        <div class="col-md-4">
+            <form asp-action="ProcessSigning" method="post" id="mainSignForm">
+                <input type="hidden" asp-for="DocumentId" />
+
+                <div class="card shadow-sm mb-4">
+                    <div class="card-body">
+                        <label class="form-label fw-bold d-block mb-3"><i class="bi bi-pen me-2"></i>1. Select Your Signature</label>
+                        <div class="d-flex flex-wrap gap-3 mb-3">
+                            @foreach (var sig in userSignatures)
+                            {
+                                <div class="signature-option">
+                                    <input type="radio" asp-for="SignatureId" value="@sig.Id" id="sig-@sig.Id" class="btn-check" required>
+                                    <label class="signature-card p-2 border rounded text-center shadow-sm" for="sig-@sig.Id">
+                                        <img src="@sig.SignatureImagePath" class="img-fluid rounded mb-1" alt="Signature" />
+                                        <div class="x-small text-muted">@sig.CreatedAt.ToString("MM/yyyy")</div>
+                                    </label>
+                                </div>
+                            }
+                        </div>
+                        <a asp-action="Create" class="btn btn-sm btn-outline-primary w-100">+ Add New Signature</a>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm mb-4">
+                    <div class="card-body">
+                        <label class="form-label fw-bold mb-3"><i class="bi bi-files me-2"></i>2. Which pages to sign?</label>
+                        <div class="row g-2 mb-2">
+                            <div class="col-6">
+                                <input type="radio" class="btn-check" asp-for="SignAllPages" value="true" id="allPages" checked>
+                                <label class="btn btn-outline-secondary btn-sm w-100" for="allPages">All Pages</label>
+                            </div>
+                            <div class="col-6">
+                                <input type="radio" class="btn-check" asp-for="SignAllPages" value="false" id="specificPages">
+                                <label class="btn btn-outline-secondary btn-sm w-100" for="specificPages">Specific Pages</label>
+                            </div>
+                        </div>
+                        <input asp-for="SpecificPages" class="form-control form-control-sm mt-2" placeholder="e.g. 1,3,5" />
+                    </div>
+                </div>
+
+                <div class="card border-success shadow-sm">
+                    <div class="card-header bg-success text-white py-2">
+                        <i class="bi bi-check-circle me-2"></i>3. Choose Signing Method
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <button type="button" class="btn btn-primary w-100 py-2 d-flex align-items-center justify-content-center gap-2 mb-2" onclick="openAnywherePicker()">
+                                <i class="bi bi-cursor-fill"></i> Interactive: Sign Anywhere
+                            </button>
+                            <p class="text-muted small text-center mb-0">Click on the document to place it manually</p>
+                        </div>
+
+                        <div class="position-relative text-center my-3">
+                            <hr>
+                            <span class="position-absolute top-50 start-50 translate-middle bg-white px-2 text-muted small">OR</span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="small fw-bold text-muted mb-1">Standard Placement:</label>
+                            <div class="input-group input-group-sm mb-2">
+                                <label class="input-group-text" for="positionSelect">Position</label>
+                                <select asp-for="Position" class="form-select" id="positionSelect">
+                                    <option value="Bottom">Bottom Right</option>
+                                    <option value="Top">Top Right</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-success w-100 fw-bold">Apply & Save Now</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                    <span>Document Preview</span>
+                    <i class="bi bi-fullscreen shadow-icon"></i>
+                </div>
+                <div class="card-body p-0">
+                    <iframe src="@ViewBag.DocumentPath" width="100%" height="700px" class="rounded-bottom" style="border:none;"></iframe>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <style>
-    .signature-option .btn-check:checked + label {
-        border-color: #198754;
-        background-color: #f8fffb;
-        box-shadow: 0 0 5px rgba(25, 135, 84, 0.5);
+    .signature-card {
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+        width: 90px;
+        background: white;
     }
+
+    .signature-card:hover {
+        transform: translateY(-3px);
+        border-color: #0d6efd !important;
+    }
+
+    .signature-option .btn-check:checked + .signature-card {
+        border-color: #198754 !important;
+        background-color: #f8fffb;
+        border-width: 2px !important;
+        box-shadow: 0 4px 8px rgba(25, 135, 84, 0.2);
+    }
+
+    .x-small { font-size: 0.75rem; }
+    
+    .card { border-radius: 12px; overflow: hidden; }
+    .btn { border-radius: 8px; }
 </style>
+@section Scripts {
+    <script>
+        function openAnywherePicker() {
+            const docId = document.querySelector('input[name="DocumentId"]').value;
+            
+            const selectedSignature = document.querySelector('input[name="SignatureId"]:checked');
+
+            if (!selectedSignature) {
+                alert("Please select a signature first!");
+                return;
+            }
+
+            const sigId = selectedSignature.value;
+
+            window.location.href = `/Signature/AnywherePicker?docId=${docId}&sigId=${sigId}`;
+        }
+    </script>
+}

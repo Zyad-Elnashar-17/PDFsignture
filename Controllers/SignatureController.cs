@@ -12,11 +12,14 @@ namespace PDFsignture.Controllers
         private readonly IDocumentRepository _docRepo;
         private readonly ISignatureRepository _sigRepo;
         private readonly IWebHostEnvironment _environment;
+        private readonly PdfSignerService _pdfService;
 
-        public SignatureController(IDocumentRepository docRepo, ISignatureRepository sigRepo, IWebHostEnvironment environment)
+        public SignatureController(IDocumentRepository docRepo, ISignatureRepository sigRepo, IWebHostEnvironment environment, PdfSignerService pdfService)
         {
             _docRepo = docRepo;
             _sigRepo = sigRepo;
+            _environment = environment;
+            _pdfService = pdfService;
             _environment = environment;
         }
 
@@ -96,6 +99,22 @@ namespace PDFsignture.Controllers
 
 
 
+        [HttpGet]
+        public async Task<IActionResult> AnywherePicker(int docId, int sigId)
+        {
+            var document = await _docRepo.GetByIdAsync(docId);
+            if (document == null) return NotFound();
+
+            // pdf file path to be used in the view for rendering the PDF
+            ViewBag.DocumentPath = document.FilePath;
+            ViewBag.SignatureId = sigId;
+            ViewBag.DocumentId = docId;
+
+            return View();
+        }
+
+
+
         [HttpPost]
         public async Task<IActionResult> ProcessSigning(SignProcessVM model)
         {
@@ -103,33 +122,24 @@ namespace PDFsignture.Controllers
             var document = await _docRepo.GetByIdAsync(model.DocumentId);
             var signature = await _sigRepo.GetByIdAsync(model.SignatureId);
 
-            if (document == null || signature == null || document.UserId != userId)
-                return NotFound();
+            if (document == null || signature == null) return NotFound();
 
-            // 1. Prepare Paths
+            // File paths
             var sourcePath = Path.Combine(_environment.WebRootPath, document.FilePath.TrimStart('/'));
-            var signedFileName = $"signed_{Guid.NewGuid()}.pdf";
-            var signedRelativePath = "/signed/" + signedFileName;
-            var destPath = Path.Combine(_environment.WebRootPath, "signed", signedFileName);
+            var sigPath = Path.Combine(_environment.WebRootPath, signature.SignatureImagePath.TrimStart('/'));
 
-            if (!Directory.Exists(Path.GetDirectoryName(destPath)))
-                Directory.CreateDirectory(Path.GetDirectoryName(destPath));
+            var fileName = $"signed_{Guid.NewGuid()}.pdf";
+            var destPath = Path.Combine(_environment.WebRootPath, "signed", fileName);
+            var relativePath = "/signed/" + fileName;
 
-            // 2. Parse Pages
             var pagesToSign = new List<int>();
             if (!model.SignAllPages && !string.IsNullOrEmpty(model.SpecificPages))
             {
                 pagesToSign = model.SpecificPages.Split(',').Select(int.Parse).ToList();
             }
 
-            // 3. Execute Service (iText7)
-            var signerService = new PdfSignerService();
-            await signerService.SignDocumentAsync(
-                sourcePath,
-                destPath,
-                Path.Combine(_environment.WebRootPath, signature.SignatureImagePath.TrimStart('/')),
-                pagesToSign,
-                model.Position);
+            // recall the PDF signing service to sign the document
+            await _pdfService.SignDocumentAsync(sourcePath, destPath, sigPath, pagesToSign, model);
 
             // 4. Save to History Table
             var signedDoc = new SignedDocument
@@ -137,7 +147,7 @@ namespace PDFsignture.Controllers
                 DocumentId = document.Id,
                 SignatureId = signature.Id,
                 UserId = userId,
-                SignedFilePath = signedRelativePath,
+                SignedFilePath = relativePath,
                 SignedAt = DateTime.UtcNow
             };
 
